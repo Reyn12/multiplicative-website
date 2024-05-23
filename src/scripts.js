@@ -11,7 +11,7 @@ function generateTables() {
   let Z = Z0;
   let results = [];
   let repeatData = [];
-  let xiValues = new Set();
+  let uiMap = new Map();
 
   for (let i = 1; i <= 300; i++) {
     const aZ = a * Z;
@@ -19,24 +19,35 @@ function generateTables() {
     const Ui = (Zi / m).toFixed(4); // Format Ui to 4 decimal places
     const Xi = Math.pow((3 * Ui) / 4, 1 / 3).toFixed(6); // Format Xi to 6 decimal places
 
-    results.push({ i, Z, a, m, aZ, Zi, Ui, Xi });
+    const row = { i, Z, a, m, aZ, Zi, Ui, Xi };
+    results.push(row);
 
-    if (xiValues.has(Xi)) {
-      repeatData.push({ i, Z, a, m, aZ, Zi, Ui, Xi });
+    if (uiMap.has(Ui)) {
+      uiMap.get(Ui).push(row);
     } else {
-      xiValues.add(Xi);
+      uiMap.set(Ui, [row]);
     }
 
     Z = Zi;
   }
 
+  // Extract only the entries with duplicate Ui values
+  repeatData = Array.from(uiMap.values())
+    .filter((group) => group.length > 1)
+    .flat();
+
+  // Count of unique Ui values that are repeated
+  const uniqueRepeatCount = Array.from(uiMap.values()).filter(
+    (group) => group.length > 1
+  ).length;
+  document.getElementById(
+    "repeatCount"
+  ).innerText = `${uniqueRepeatCount} data`;
+
   updateTable("randomTable", results.slice(0, 5));
   if (results.length > 5) {
     addScroll("randomTable", results.slice(5));
   }
-
-  const repeatCount = repeatData.length;
-  document.getElementById("repeatCount").innerText = `${repeatCount} data`;
 
   updateTable("repeatTable", repeatData.slice(0, 5));
   if (repeatData.length > 5) {
